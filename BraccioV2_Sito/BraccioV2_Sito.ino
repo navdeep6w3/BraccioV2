@@ -24,11 +24,12 @@
 #define PINZA_IN4 13
 
 // ===== WIFI SETTINGS =====
-const char* ssid = "ESP32_CNC_Control";
+const char* ssid = "BraccioRobotico";
 const char* password = "12345678";
 
 // ===== SETTINGS MOTORI =====
 #define MAX_SPEED 20000
+#define DEFAULT_SPEED 5000
 
 // ===== SETTINGS PINZA =====
 #define STEPS_PER_REV 2048
@@ -51,7 +52,6 @@ bool webXPos = false, webXNeg = false;
 bool webYPos = false, webYNeg = false;
 bool webZPos = false, webZNeg = false;
 bool webPinzaOpen = false, webPinzaClose = false;
-int webSpeed = 5000;
 
 // ===== HTML PAGE =====
 const char* htmlPage = R"rawliteral(
@@ -149,25 +149,6 @@ const char* htmlPage = R"rawliteral(
         .enable-btn.enabled {
             background-color: #4CAF50;
         }
-        .speed-control {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        .speed-slider {
-            width: 200px;
-            height: 6px;
-            border-radius: 3px;
-            background: #ddd;
-            outline: none;
-        }
-        .speed-value {
-            font-weight: bold;
-            color: #333;
-            min-width: 80px;
-        }
         .axis-group {
             display: flex;
             justify-content: space-around;
@@ -192,7 +173,7 @@ const char* htmlPage = R"rawliteral(
 </head>
 <body>
     <div class="container">
-        <h1>🤖 ESP32 CNC Control</h1>
+        <h1>🤖 Braccio robotico V2</h1>
         
         <!-- Sezione controlli principali del sistema -->
         <div class="control-section">
@@ -204,19 +185,6 @@ const char* htmlPage = R"rawliteral(
                 <button class="control-btn enable-btn" id="pinzaBtn" onclick="cambiaStatoPinza()">
                     Pinza: <span id="statoPinza">Disabilitata</span>
                 </button>
-            </div>
-        </div>
-
-        <!-- Controllo velocità movimenti -->
-        <div class="control-section">
-            <h3>🎚️ Velocità</h3>
-            <div class="speed-control">
-                <span>Lenta</span>
-                <input type="range" class="speed-slider" id="sliderVelocita" 
-                       min="1000" max="20000" value="5000" step="1000"
-                       oninput="cambiaVelocita(this.value)">
-                <span>Veloce</span>
-                <div class="speed-value" id="valoreVelocita">5000</div>
             </div>
         </div>
 
@@ -300,17 +268,6 @@ const char* htmlPage = R"rawliteral(
         // Variabili globali per gestire i timer dei movimenti continui
         let timerMovimentoAssi = null;  // Timer per movimenti degli assi X, Y, Z
         let timerMovimentoPinza = null; // Timer per movimenti della pinza
-
-        /**
-         * Cambia la velocità dei movimenti
-         * @param {string} valore - Nuovo valore di velocità dal slider
-         */
-        function cambiaVelocita(valore) {
-            // Aggiorna l'interfaccia con il nuovo valore
-            document.getElementById('valoreVelocita').textContent = valore;
-            // Invia il comando di cambio velocità all'ESP32
-            fetch('/setSpeed?value=' + valore);
-        }
 
         /**
          * Attiva/disattiva i motori degli assi
@@ -479,7 +436,6 @@ void setup() {
   server.on("/", handleRoot);
   server.on("/toggleMotors", handleToggleMotors);
   server.on("/togglePinza", handleTogglePinza);
-  server.on("/setSpeed", handleSetSpeed);
   server.on("/move", handleMove);
   server.on("/pinza", handlePinzaControl);
   server.on("/status", handleStatus);
@@ -512,15 +468,6 @@ void handleTogglePinza() {
   
   server.send(200, "text/plain", pinzaEnabled ? "enabled" : "disabled");
   Serial.println(pinzaEnabled ? "Pinza abilitata" : "Pinza disabilitata");
-}
-
-void handleSetSpeed() {
-  if (server.hasArg("value")) {
-    webSpeed = server.arg("value").toInt();
-    webSpeed = constrain(webSpeed, 1000, MAX_SPEED);
-    Serial.println("Velocità impostata a: " + String(webSpeed));
-  }
-  server.send(200, "text/plain", "OK");
 }
 
 void handleMove() {
@@ -593,7 +540,7 @@ void handlePinzaControl() {
 void handleStatus() {
   String status = "Motori: " + String(motorsEnabled ? "✅ Abilitati" : "❌ Disabilitati");
   status += "<br>Pinza: " + String(pinzaEnabled ? "✅ Abilitata" : "❌ Disabilitata");
-  status += "<br>Velocità: " + String(webSpeed);
+  status += "<br>Velocità fissa: " + String(DEFAULT_SPEED);
   status += "<br>Controllo: 🌐 Solo Web Interface";
   
   server.send(200, "text/html", status);
@@ -627,17 +574,17 @@ void loop() {
   // Gestione web server
   server.handleClient();
   
-  // Controllo web per motori principali
+  // Controllo web per motori principali (velocità fissa)
   int xSpeed = 0, ySpeed = 0, zSpeed = 0;
   
-  if (webXPos) xSpeed = webSpeed;
-  else if (webXNeg) xSpeed = -webSpeed;
+  if (webXPos) xSpeed = DEFAULT_SPEED;
+  else if (webXNeg) xSpeed = -DEFAULT_SPEED;
   
-  if (webYPos) ySpeed = webSpeed;
-  else if (webYNeg) ySpeed = -webSpeed;
+  if (webYPos) ySpeed = DEFAULT_SPEED;
+  else if (webYNeg) ySpeed = -DEFAULT_SPEED;
   
-  if (webZPos) zSpeed = webSpeed;
-  else if (webZNeg) zSpeed = -webSpeed;
+  if (webZPos) zSpeed = DEFAULT_SPEED;
+  else if (webZNeg) zSpeed = -DEFAULT_SPEED;
   
   stepperX.setSpeed(xSpeed);
   stepperY.setSpeed(ySpeed);
