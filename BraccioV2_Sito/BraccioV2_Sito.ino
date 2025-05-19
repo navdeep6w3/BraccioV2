@@ -60,7 +60,7 @@ const char* htmlPage = R"rawliteral(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 CNC Control</title>
+    <title>Braccio robotico V2</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -173,7 +173,7 @@ const char* htmlPage = R"rawliteral(
 </head>
 <body>
     <div class="container">
-        <h1>🤖 Braccio robotico V2</h1>
+        <h1>🤖 ESP32 CNC Control</h1>
         
         <!-- Sezione controlli principali del sistema -->
         <div class="control-section">
