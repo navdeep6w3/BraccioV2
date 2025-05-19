@@ -173,7 +173,7 @@ const char* htmlPage = R"rawliteral(
 </head>
 <body>
     <div class="container">
-        <h1>🤖 ESP32 CNC Control</h1>
+        <h1>🤖 Braccio robotico V2</h1>
         
         <!-- Sezione controlli principali del sistema -->
         <div class="control-section">
